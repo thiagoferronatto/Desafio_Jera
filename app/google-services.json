@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "636246260483",
+    "firebase_url": "https://desafio---jera-2d037.firebaseio.com",
+    "project_id": "desafio---jera-2d037",
+    "storage_bucket": "desafio---jera-2d037.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:636246260483:android:f547e1753fce21c73c4736",
+        "android_client_info": {
+          "package_name": "com.example.desafio_jera"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "636246260483-asrnt7n0bopm8q6pt1ako6sfvn78ub2p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpMJe1o3h8HlBBLJ_24d_wZJaeBDTaXjQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "636246260483-asrnt7n0bopm8q6pt1ako6sfvn78ub2p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
