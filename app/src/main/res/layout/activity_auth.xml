@@ -27,9 +27,9 @@
       android:id="@+id/label_email"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
+      android:labelFor="@id/input_email"
       android:text="@string/e_mail"
-      android:textSize="18sp"
-      android:labelFor="@id/input_email"/>
+      android:textSize="18sp" />
 
     <EditText
       android:id="@+id/input_email"

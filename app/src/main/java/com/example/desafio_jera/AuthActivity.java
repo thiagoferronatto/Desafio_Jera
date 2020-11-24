@@ -217,4 +217,12 @@ public class AuthActivity extends AppCompatActivity {
         Log.e("ERRO", e.getMessage());
       });
   }
+
+  @Override
+  public void onBackPressed() {
+    if (login.getVisibility() != View.VISIBLE)
+      resetarLayout();
+    else
+      super.onBackPressed();
+  }
 }

@@ -11,4 +11,6 @@
   <string name="nome">Nome:</string>
   <string name="nascimento">Nascimento:</string>
   <string name="fazer_login">Fazer login</string>
+  <string name="pesquisar">PESQUISAR</string>
+  <string name="pesquisar_no_tmdb">Pesquisar no TMDB</string>
 </resources>

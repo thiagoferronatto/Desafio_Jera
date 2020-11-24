@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+  <androidx.cardview.widget.CardView
+    android:id="@+id/card_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginHorizontal="20sp"
+    android:layout_marginVertical="10sp"
+    app:cardCornerRadius="20sp">
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_margin="20sp"
+      android:orientation="horizontal"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent">
+
+      <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="3"
+        app:cardCornerRadius="10sp">
+
+        <ImageView
+          android:id="@+id/img_poster"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:adjustViewBounds="true"
+          app:srcCompat="@drawable/ic_launcher_background" />
+      </androidx.cardview.widget.CardView>
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20sp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+          android:id="@+id/item_titulo"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:textColor="@color/white"
+          android:textSize="24sp"
+          android:textStyle="bold" />
+
+        <TextView
+          android:id="@+id/item_overview"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginBottom="10sp"
+          android:textStyle="italic" />
+
+        <TextView
+          android:id="@+id/item_data"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginBottom="10sp"
+          android:textSize="14sp" />
+
+        <TextView
+          android:id="@+id/item_reviews"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content" />
+      </LinearLayout>
+    </LinearLayout>
+
+  </androidx.cardview.widget.CardView>
+
+
+</FrameLayout>
