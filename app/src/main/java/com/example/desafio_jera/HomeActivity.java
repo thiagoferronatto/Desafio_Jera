@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -13,14 +16,18 @@ import android.widget.ListView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -58,6 +65,7 @@ public class HomeActivity extends AppCompatActivity {
 
     nomeDoFilmeET = findViewById(R.id.input_nome_filme);
 
+    // Isso vai mostrar novamente a watchlist do perfil assim que a caixa de pesquisa esvaziar
     nomeDoFilmeET.addTextChangedListener(new TextWatcher() {
       @Override
       public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -71,17 +79,21 @@ public class HomeActivity extends AppCompatActivity {
 
       @Override
       public void afterTextChanged(Editable s) {
-        if (nomeDoFilmeET.getEditableText().toString().isEmpty())
-          // TODO: Reiniciar a lista com os itens da biblioteca do usuário
+        if (nomeDoFilmeET.getEditableText().toString().isEmpty()) {
+          AlertDialog loading = carregando();
+          inicializarLista(loading);
           listaDeFilmes.setAdapter(null);
+        }
       }
     });
 
     listaDeFilmes = findViewById(R.id.lista_principal);
-    // TODO: Iniciar a lista com os itens da biblioteca do usuário
 
     mAuth = FirebaseAuth.getInstance();
     db = FirebaseFirestore.getInstance();
+
+    AlertDialog loading = carregando();
+    inicializarLista(loading);
 
     btnSair.setOnClickListener(v -> {
       mAuth.signOut();
@@ -92,8 +104,9 @@ public class HomeActivity extends AppCompatActivity {
     });
 
     btnPesquisar.setOnClickListener(v -> chamarAPI());
+  }
 
-    // TODO: Implementar clique em itens da lista para adicioná-los à biblioteca
+  void chamarAPI() {
     listaDeFilmes.setOnItemClickListener((parent, view, position, id) -> {
       Filme clicado = (Filme) listaDeFilmes.getAdapter().getItem(position);
       new AlertDialog.Builder(HomeActivity.this)
@@ -104,9 +117,7 @@ public class HomeActivity extends AppCompatActivity {
         .setCancelable(false)
         .show();
     });
-  }
 
-  void chamarAPI() {
     if (nomeDoFilmeET.getEditableText().toString().isEmpty()) {
       new AlertDialog.Builder(this)
         .setTitle("Digite algo!")
@@ -184,18 +195,12 @@ public class HomeActivity extends AppCompatActivity {
   }
 
   void realizarInsercao(String username, @NotNull Filme filme, AlertDialog loading) {
-    Map<String, Object> filmeMap = new HashMap<>();
-    filmeMap.put("titulo", filme.getOriginal_title());
-    filmeMap.put("lancamento", filme.getRelease_date());
-    filmeMap.put("overview", filme.getOverview());
-    filmeMap.put("reviews", filme.getVote_average());
-    filmeMap.put("poster", filme.getPoster_path());
 
     db.collection("usuarios")
       .document(username)
       .collection("perfis")
       .document("default")
-      .update(filme.getOriginal_title(), filmeMap)
+      .update("filmes", FieldValue.arrayUnion(filme))
       .addOnSuccessListener(docRef -> {
         loading.dismiss();
         new AlertDialog.Builder(HomeActivity.this)
@@ -222,6 +227,48 @@ public class HomeActivity extends AppCompatActivity {
       .document("default")
       .set(new HashMap<String, Object>())
       .addOnSuccessListener(docRef -> realizarInsercao(username, filme, loading))
+      .addOnFailureListener(e -> new AlertDialog.Builder(HomeActivity.this)
+        .setTitle("Erro desconhecido!")
+        .setMessage("Tente novamente mais tarde.")
+        .setCancelable(false)
+        .setPositiveButton("OK", null)
+        .show());
+  }
+
+  void inicializarLista(AlertDialog loading) {
+    listaDeFilmes.setOnItemClickListener(null);
+
+    String email = mAuth.getCurrentUser().getEmail(),
+      username = email.substring(0, email.indexOf("@"));
+    db.collection("usuarios")
+      .document(username)
+      .collection("perfis")
+      .document("default")
+      .get()
+      .addOnSuccessListener(docSnap -> {
+        loading.dismiss();
+        if (docSnap.exists()) {
+          List<HashMap<String, Object>> filmes =
+            (ArrayList<HashMap<String, Object>>) docSnap.get("filmes");
+
+          List<Filme> filmesAL = new ArrayList<>();
+
+          for (HashMap<String, Object> i : filmes) {
+            Filme temp = new Filme();
+
+            temp.setOriginal_title(i.get("original_title").toString());
+            temp.setOverview(i.get("overview").toString());
+            temp.setPoster_path(i.get("poster_path").toString());
+            temp.setRelease_date(i.get("release_date").toString());
+            temp.setVote_average(Double.parseDouble(i.get("vote_average").toString()));
+
+            filmesAL.add(temp);
+          }
+
+          FilmeAdapter adapter = new FilmeAdapter(HomeActivity.this, filmesAL);
+          listaDeFilmes.setAdapter(adapter);
+        }
+      })
       .addOnFailureListener(e -> new AlertDialog.Builder(HomeActivity.this)
         .setTitle("Erro desconhecido!")
         .setMessage("Tente novamente mais tarde.")
