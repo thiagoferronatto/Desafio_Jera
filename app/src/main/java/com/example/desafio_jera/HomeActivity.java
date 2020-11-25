@@ -13,9 +13,14 @@ import android.widget.ListView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -31,6 +36,7 @@ public class HomeActivity extends AppCompatActivity {
   String apiKey = "caf2cc00ea28ef7039348f15b01f2fcc";
 
   FirebaseAuth mAuth;
+  FirebaseFirestore db;
 
   EditText nomeDoFilmeET;
 
@@ -75,6 +81,7 @@ public class HomeActivity extends AppCompatActivity {
     // TODO: Iniciar a lista com os itens da biblioteca do usuário
 
     mAuth = FirebaseAuth.getInstance();
+    db = FirebaseFirestore.getInstance();
 
     btnSair.setOnClickListener(v -> {
       mAuth.signOut();
@@ -87,6 +94,16 @@ public class HomeActivity extends AppCompatActivity {
     btnPesquisar.setOnClickListener(v -> chamarAPI());
 
     // TODO: Implementar clique em itens da lista para adicioná-los à biblioteca
+    listaDeFilmes.setOnItemClickListener((parent, view, position, id) -> {
+      Filme clicado = (Filme) listaDeFilmes.getAdapter().getItem(position);
+      new AlertDialog.Builder(HomeActivity.this)
+        .setTitle(String.format("Adicionar %s à sua lista?", clicado.getOriginal_title()))
+        .setMessage("Esse filme será inserido em sua lista de desejos.")
+        .setPositiveButton("Sim", (d, w) -> adicionarFilme(clicado))
+        .setNegativeButton("Não", null)
+        .setCancelable(false)
+        .show();
+    });
   }
 
   void chamarAPI() {
@@ -145,5 +162,71 @@ public class HomeActivity extends AppCompatActivity {
     super.onResume();
     if (!nomeDoFilmeET.getEditableText().toString().isEmpty())
       chamarAPI();
+  }
+
+  void adicionarFilme(Filme filme) {
+    AlertDialog loading = carregando();
+
+    String email = mAuth.getCurrentUser().getEmail(),
+      username = email.substring(0, email.indexOf("@"));
+
+    db.collection("usuarios")
+      .document(username)
+      .collection("perfis")
+      .document("default")
+      .get()
+      .addOnSuccessListener(docSnap -> {
+        if (docSnap.exists())
+          realizarInsercao(username, filme, loading);
+        else
+          inicializarPerfil(username, filme, loading);
+      });
+  }
+
+  void realizarInsercao(String username, @NotNull Filme filme, AlertDialog loading) {
+    Map<String, Object> filmeMap = new HashMap<>();
+    filmeMap.put("titulo", filme.getOriginal_title());
+    filmeMap.put("lancamento", filme.getRelease_date());
+    filmeMap.put("overview", filme.getOverview());
+    filmeMap.put("reviews", filme.getVote_average());
+    filmeMap.put("poster", filme.getPoster_path());
+
+    db.collection("usuarios")
+      .document(username)
+      .collection("perfis")
+      .document("default")
+      .update(filme.getOriginal_title(), filmeMap)
+      .addOnSuccessListener(docRef -> {
+        loading.dismiss();
+        new AlertDialog.Builder(HomeActivity.this)
+          .setTitle("Pronto!")
+          .setMessage(String.format("%s está na sua lista!", filme.getOriginal_title()))
+          .setPositiveButton("OK", null)
+          .show();
+      })
+      .addOnFailureListener(e -> {
+        loading.dismiss();
+        new AlertDialog.Builder(HomeActivity.this)
+          .setTitle("Erro desconhecido!")
+          .setMessage("Tente novamente mais tarde.")
+          .setCancelable(false)
+          .setPositiveButton("OK", null)
+          .show();
+      });
+  }
+
+  void inicializarPerfil(String username, Filme filme, AlertDialog loading) {
+    db.collection("usuarios")
+      .document(username)
+      .collection("perfis")
+      .document("default")
+      .set(new HashMap<String, Object>())
+      .addOnSuccessListener(docRef -> realizarInsercao(username, filme, loading))
+      .addOnFailureListener(e -> new AlertDialog.Builder(HomeActivity.this)
+        .setTitle("Erro desconhecido!")
+        .setMessage("Tente novamente mais tarde.")
+        .setCancelable(false)
+        .setPositiveButton("OK", null)
+        .show());
   }
 }

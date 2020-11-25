@@ -1,9 +1,9 @@
 package com.example.desafio_jera;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,8 +72,14 @@ public class FilmeAdapter extends BaseAdapter {
 
     titulo.setText(atual.getOriginal_title());
     overview.setText(atual.getOverview());
-    String[] d = atual.getRelease_date().split("-");
-    data.setText(String.format("Lançamento: %s/%s/%s", d[2], d[1], d[0]));
+    if (atual.getRelease_date() != null && atual.getRelease_date().contains("-")) {
+      String[] d;
+      d = atual.getRelease_date().split("-");
+      data.setText(String.format("Lançamento: %s/%s/%s", d[2], d[1], d[0]));
+    } else if (atual.getRelease_date() != null)
+      data.setText(String.format("Lançamento: %s", atual.getRelease_date()));
+    else
+      data.setText(R.string.sem_info_lancamento);
     reviews.setText(
       String.format(
         new Locale("pt", "BR"),
@@ -92,8 +98,12 @@ public class FilmeAdapter extends BaseAdapter {
       InputStream is = (InputStream) new URL(url).getContent();
       return Drawable.createFromStream(is, null);
     } catch (Exception e) {
-      assert e.getMessage() != null;
-      Log.e("deu merda marreco", e.getMessage());
+      new AlertDialog.Builder(context)
+        .setTitle("Algumas imagens não serão exibidas")
+        .setMessage("Tivemos problemas ao tentar acessar um ou mais pôsteres; esses não serão exibidos.")
+        .setCancelable(false)
+        .setPositiveButton("OK", null)
+        .show();
       return null;
     }
   }
