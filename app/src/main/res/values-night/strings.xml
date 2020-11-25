@@ -13,4 +13,5 @@
   <string name="fazer_login">Fazer login</string>
   <string name="pesquisar">PESQUISAR</string>
   <string name="pesquisar_no_tmdb">Pesquisar no TMDB</string>
+  <string name="sem_info_lancamento">Sem informações sobre o lançamento</string>
 </resources>
