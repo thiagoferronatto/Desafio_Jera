@@ -35,20 +35,6 @@ public class AuthActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_auth);
-
-    cadastro = findViewById(R.id.btn_cadastro);
-    login = findViewById(R.id.btn_login);
-
-    emailET = findViewById(R.id.input_email);
-    senhaET = findViewById(R.id.input_senha);
-    nomeET = findViewById(R.id.input_nome);
-    nascET = findViewById(R.id.input_nasc);
-
-    lblEmail = findViewById(R.id.label_email);
-    lblSenha = findViewById(R.id.label_senha);
-    lblNome = findViewById(R.id.label_nome);
-    lblNasc = findViewById(R.id.label_nasc);
 
     irParaHome = new Intent(this, HomeActivity.class);
 
@@ -74,6 +60,21 @@ public class AuthActivity extends AppCompatActivity {
   void router(FirebaseUser usuario) {
     if (usuario != null) {
       startActivity(irParaHome);
+    } else {
+      setContentView(R.layout.activity_auth);
+
+      cadastro = findViewById(R.id.btn_cadastro);
+      login = findViewById(R.id.btn_login);
+
+      emailET = findViewById(R.id.input_email);
+      senhaET = findViewById(R.id.input_senha);
+      nomeET = findViewById(R.id.input_nome);
+      nascET = findViewById(R.id.input_nasc);
+
+      lblEmail = findViewById(R.id.label_email);
+      lblSenha = findViewById(R.id.label_senha);
+      lblNome = findViewById(R.id.label_nome);
+      lblNasc = findViewById(R.id.label_nasc);
     }
   }
 
@@ -113,8 +114,8 @@ public class AuthActivity extends AppCompatActivity {
       nasc = nascET.getEditableText().toString();
 
     if (nome.isEmpty() || nasc.isEmpty()) {
-      camposVazios();
       loading.dismiss();
+      camposVazios();
       return;
     }
 
@@ -209,8 +210,8 @@ public class AuthActivity extends AppCompatActivity {
       .addOnSuccessListener(docRef -> startActivity(irParaHome))
       .addOnFailureListener(e -> {
         new AlertDialog.Builder(this)
-          .setTitle("Erro!")
-          .setMessage("Tivemos um problema desconhecido. Tente novamente mais tarde.")
+          .setTitle("Erro desconhecido!")
+          .setMessage("Tente novamente mais tarde.")
           .setCancelable(false)
           .setPositiveButton("OK", (a, b) -> resetarLayout())
           .show();

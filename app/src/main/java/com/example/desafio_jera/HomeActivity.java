@@ -6,9 +6,6 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -24,10 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -47,7 +41,7 @@ public class HomeActivity extends AppCompatActivity {
 
   EditText nomeDoFilmeET;
 
-  Button btnSair, btnPesquisar;
+  Button btnSair, btnAjuda, btnPesquisar;
 
   ListView listaDeFilmes;
 
@@ -61,6 +55,7 @@ public class HomeActivity extends AppCompatActivity {
     StrictMode.setThreadPolicy(policy);
 
     btnSair = findViewById(R.id.btn_sair);
+    btnAjuda = findViewById(R.id.btn_ajuda);
     btnPesquisar = findViewById(R.id.btn_pesquisar);
 
     nomeDoFilmeET = findViewById(R.id.input_nome_filme);
@@ -82,7 +77,6 @@ public class HomeActivity extends AppCompatActivity {
         if (nomeDoFilmeET.getEditableText().toString().isEmpty()) {
           AlertDialog loading = carregando();
           inicializarLista(loading);
-          listaDeFilmes.setAdapter(null);
         }
       }
     });
@@ -103,10 +97,17 @@ public class HomeActivity extends AppCompatActivity {
       finish();
     });
 
-    btnPesquisar.setOnClickListener(v -> chamarAPI());
+    btnAjuda.setOnClickListener(v -> new AlertDialog.Builder(HomeActivity.this)
+      .setTitle("Informações")
+      .setMessage(R.string.texto_ajuda)
+      .setPositiveButton("OK", null)
+      .show());
+
+    btnPesquisar.setOnClickListener(v ->
+      chamarAPI(nomeDoFilmeET.getEditableText().toString()));
   }
 
-  void chamarAPI() {
+  void chamarAPI(String query) {
     listaDeFilmes.setOnItemClickListener((parent, view, position, id) -> {
       Filme clicado = (Filme) listaDeFilmes.getAdapter().getItem(position);
       new AlertDialog.Builder(HomeActivity.this)
@@ -118,7 +119,7 @@ public class HomeActivity extends AppCompatActivity {
         .show();
     });
 
-    if (nomeDoFilmeET.getEditableText().toString().isEmpty()) {
+    if (query.isEmpty()) {
       new AlertDialog.Builder(this)
         .setTitle("Digite algo!")
         .setMessage("O campo de pesquisa não pode estar vazio.")
@@ -132,7 +133,7 @@ public class HomeActivity extends AppCompatActivity {
 
     Call<ListaDeFilmes> call = new RetrofitConfig()
       .getFilmeService()
-      .buscarFilme(nomeDoFilmeET.getEditableText().toString(), apiKey);
+      .buscarFilme(query, apiKey);
 
     call.enqueue(new Callback<ListaDeFilmes>() {
       @Override
@@ -147,8 +148,8 @@ public class HomeActivity extends AppCompatActivity {
       public void onFailure(Call<ListaDeFilmes> call, Throwable t) {
         loading.dismiss();
         new AlertDialog.Builder(HomeActivity.this)
-          .setTitle("Erro!")
-          .setMessage("Tivemos um problema desconhecido, tente novamente mais tarde.")
+          .setTitle("Erro desconhecido!")
+          .setMessage("Tente novamente mais tarde.")
           .show();
       }
     });
@@ -171,8 +172,11 @@ public class HomeActivity extends AppCompatActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    if (!nomeDoFilmeET.getEditableText().toString().isEmpty())
-      chamarAPI();
+
+    String query = nomeDoFilmeET.getEditableText().toString();
+
+    if (!query.isEmpty())
+      chamarAPI(query);
   }
 
   void adicionarFilme(Filme filme) {
@@ -195,7 +199,6 @@ public class HomeActivity extends AppCompatActivity {
   }
 
   void realizarInsercao(String username, @NotNull Filme filme, AlertDialog loading) {
-
     db.collection("usuarios")
       .document(username)
       .collection("perfis")
@@ -206,7 +209,7 @@ public class HomeActivity extends AppCompatActivity {
         new AlertDialog.Builder(HomeActivity.this)
           .setTitle("Pronto!")
           .setMessage(String.format("%s está na sua lista!", filme.getOriginal_title()))
-          .setPositiveButton("OK", null)
+          .setPositiveButton("OK", (d, w) -> nomeDoFilmeET.setText(""))
           .show();
       })
       .addOnFailureListener(e -> {
@@ -236,7 +239,19 @@ public class HomeActivity extends AppCompatActivity {
   }
 
   void inicializarLista(AlertDialog loading) {
-    listaDeFilmes.setOnItemClickListener(null);
+    listaDeFilmes.setOnItemClickListener((parent, view, position, id) -> {
+      Filme clicado = (Filme) listaDeFilmes.getAdapter().getItem(position);
+      new AlertDialog.Builder(HomeActivity.this)
+        .setTitle(String.format("Deseja marcar %s como assistido?", clicado.getOriginal_title()))
+        .setMessage("Ele será removido da sua lista, mas poderá ser adicionado novamente normalmente.")
+        .setNegativeButton("Não", null)
+        .setPositiveButton("Sim", (d, w) -> {
+          AlertDialog loading2 = carregando();
+          removerFilme(clicado, loading2);
+        })
+        .setCancelable(false)
+        .show();
+    });
 
     String email = mAuth.getCurrentUser().getEmail(),
       username = email.substring(0, email.indexOf("@"));
@@ -269,11 +284,52 @@ public class HomeActivity extends AppCompatActivity {
           listaDeFilmes.setAdapter(adapter);
         }
       })
-      .addOnFailureListener(e -> new AlertDialog.Builder(HomeActivity.this)
-        .setTitle("Erro desconhecido!")
-        .setMessage("Tente novamente mais tarde.")
-        .setCancelable(false)
-        .setPositiveButton("OK", null)
-        .show());
+      .addOnFailureListener(e -> {
+        loading.dismiss();
+        new AlertDialog.Builder(HomeActivity.this)
+          .setTitle("Erro desconhecido!")
+          .setMessage("Tente novamente mais tarde.")
+          .setCancelable(false)
+          .setPositiveButton("OK", null)
+          .show();
+      });
+  }
+
+  void removerFilme(Filme filme, AlertDialog loading) {
+    String username = mAuth.getCurrentUser().getEmail();
+    username = username.substring(0, username.indexOf("@"));
+
+    db.collection("usuarios")
+      .document(username)
+      .collection("perfis")
+      .document("default")
+      .update("filmes", FieldValue.arrayRemove(filme))
+      .addOnSuccessListener(docRef -> {
+        inicializarLista(loading);
+        new AlertDialog.Builder(HomeActivity.this)
+          .setTitle("Pronto!")
+          .setMessage(String.format("%s não está mais em sua lista!", filme.getOriginal_title()))
+          .setPositiveButton("OK", null)
+          .show();
+      })
+      .addOnFailureListener(e -> {
+        loading.dismiss();
+        new AlertDialog.Builder(HomeActivity.this)
+          .setTitle("Erro desconhecido!")
+          .setMessage("Tente novamente mais tarde.")
+          .setCancelable(false)
+          .setPositiveButton("OK", null)
+          .show();
+      });
+  }
+
+  @Override
+  public void onBackPressed() {
+    String query = nomeDoFilmeET.getEditableText().toString();
+
+    if (!query.isEmpty()) {
+      nomeDoFilmeET.setText("");
+    } else
+      super.onBackPressed();
   }
 }

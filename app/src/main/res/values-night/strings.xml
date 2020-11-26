@@ -14,4 +14,6 @@
   <string name="pesquisar">PESQUISAR</string>
   <string name="pesquisar_no_tmdb">Pesquisar no TMDB</string>
   <string name="sem_info_lancamento">Sem informações sobre o lançamento</string>
+  <string name="ajuda">Ajuda</string>
+  <string name="texto_ajuda">Para adicionar um filme à sua watchlist, basta pesquisar por ele utilizando a barra de pesquisa e o botão \"Pesquisar\"; ao encontrá-lo, clique nele e depois em \"Sim\". Sua watchlist será mostrada quando a barra de pesquisa estiver vazia ou logo após adicionar algo à lista. Para marcar um filme como assistido, clique nele quando estiver vendo a watchlist.</string>
 </resources>

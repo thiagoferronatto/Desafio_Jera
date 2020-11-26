@@ -1,6 +1,5 @@
 package com.example.desafio_jera;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
@@ -98,12 +97,6 @@ public class FilmeAdapter extends BaseAdapter {
       InputStream is = (InputStream) new URL(url).getContent();
       return Drawable.createFromStream(is, null);
     } catch (Exception e) {
-      new AlertDialog.Builder(context)
-        .setTitle("Algumas imagens não serão exibidas")
-        .setMessage("Tivemos problemas ao tentar acessar um ou mais pôsteres; esses não serão exibidos.")
-        .setCancelable(false)
-        .setPositiveButton("OK", null)
-        .show();
       return null;
     }
   }
